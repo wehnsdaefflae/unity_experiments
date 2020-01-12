@@ -133,12 +133,16 @@ namespace Assets {
             this.container.Set(botCenter, XtopLeft + sizeWindow / 2, YtopLeft + sizeWindow);
             this.container.Set(center, XtopLeft + sizeWindow / 2, YtopLeft + sizeWindow / 2);
         }
-
-        public void Generate(float randomness) {
+        
+        private void Scaffold() {
             this.container.Set(Random.value, 0, 0);
             this.container.Set(Random.value, 0, this.size);
             this.container.Set(Random.value, this.size, 0);
             this.container.Set(Random.value, this.size, this.size);
+        }
+
+        public void Generate(float randomness) {
+            this.Scaffold();
 
             /*
             public void GenerateShader(float randomness) {
@@ -152,10 +156,9 @@ namespace Assets {
             // sizeCube must be power of 2
 
             while (sizeCube >= 2) {
-                // each sizeCobe in parallel
-
                 for (int x = 0; x < this.size / sizeCube; x += 1) {
                     for (int y = 0; y < this.size / sizeCube; y += 1) {
+                        // sizeCubes should each be calculated in parallel shaders
                         this.Interpolate(x * sizeCube, y * sizeCube, sizeCube, randomness);
                     }
                 }
