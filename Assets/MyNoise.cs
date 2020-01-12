@@ -155,14 +155,17 @@ namespace Assets {
             int sizeCube = this.size;
             // sizeCube must be power of 2
 
-            while (sizeCube >= 2) {
-                for (int x = 0; x < this.size / sizeCube; x += 1) {
-                    for (int y = 0; y < this.size / sizeCube; y += 1) {
-                        // sizeCubes should each be calculated in parallel shaders
-                        this.Interpolate(x * sizeCube, y * sizeCube, sizeCube, randomness);
-                    }
-                }
+            int noTiles;
+            NDimEnumerator generatorCoordinates;
+            int[] coordinates;
 
+            while (sizeCube >= 2) {
+                noTiles = this.size / sizeCube;
+                generatorCoordinates = new NDimEnumerator(new int[] { noTiles, noTiles });
+                while (generatorCoordinates.MoveNext()) {  // do this in parallel
+                    coordinates = generatorCoordinates.Current;
+                    this.Interpolate(coordinates[0] * sizeCube, coordinates[1] * sizeCube, sizeCube, randomness);
+                }
                 sizeCube /= 2;
             }
 

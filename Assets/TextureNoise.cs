@@ -10,6 +10,9 @@ public class TextureNoise : MonoBehaviour {
     public float randomness = .1f;
     private NoiseContainer NoiseVolume;
     private MyNoise myNoise;
+    private readonly NDimEnumerator nDimEnumerator = new NDimEnumerator(new int[] {2, 2, 1});
+    public int[] runner;
+
 
     private static Texture2D CubeToTexture(NoiseVolume noiseVolume, int layer) {
         int[] shape = noiseVolume.shape;
@@ -53,6 +56,11 @@ public class TextureNoise : MonoBehaviour {
 
         // renderer.material.mainTexture = TextureNoise.CubeToTexture(this.NoiseVolume, this.layer);
         renderer.material.mainTexture = ((NoiseTextureGray) this.NoiseVolume).texture;
+
+        nDimEnumerator.MoveNext();
+        this.runner = nDimEnumerator.Current;
+
+        return;
     }
 
 }

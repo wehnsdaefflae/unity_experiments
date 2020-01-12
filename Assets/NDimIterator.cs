@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 namespace Assets {
     class NDimEnumerator : IEnumerator<int[]> {
         public readonly int dimensions;
-        private int[] current;
+        private readonly int[] current;
         private readonly int[] target;
 
         public int[] Current {
@@ -26,28 +26,25 @@ namespace Assets {
         }
 
         public void Dispose() {
-            this.current[this.dimensions - 1] = -1;
         }
 
         public void Reset() {
-            this.current = new int[this.dimensions];
+            for (int i = 0; i < this.dimensions - 1; i++) this.current[i] = 0;
+            this.current[this.dimensions - 1] = -1;
         }
 
         public NDimEnumerator(int[] target) {
             this.dimensions = target.Length;
             this.target = target;
             this.current = new int[this.dimensions];
-            for (int i = 0; i < this.dimensions; i++) {
-                if (i == this.dimensions - 1) Assert.IsTrue(0 < this.target[i]);
-                else Assert.IsTrue(this.target[i] >= 0);
-            }
+            for (int i = 0; i < this.dimensions; i++) Assert.IsTrue(this.target[i] >= 1);
+            this.Reset();
         }
 
         public bool MoveNext() {
             int c;
             for (int i = this.dimensions - 1; i >= 0; i--) {
                 c = current[i];
-                if (c < 0) return false;
 
                 // below target
                 if (c < this.target[i] - 1) {
