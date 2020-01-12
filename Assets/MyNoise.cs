@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -29,47 +30,70 @@ namespace Assets {
             this.container = container;
         }
 
-        public void Generate(float randomness) {
-            /*
-            // scaffold
-            NDimEnumerator nDimEnumerator = new NDimEnumerator(new int[] { 2, 2, 2 });
+
+        private void Scaffold() {
             int[] coordinates = new int[this.container.dimensionality];
-            do {
-                for (int i = 0; i < this.container.dimensionality; i++)
-                    coordinates[i] = nDimEnumerator.Current[i] * this.size;
+            for (int i = 0; i < coordinates.Length; i++) coordinates[i] = 2;
+            NDimEnumerator nDimEnumerator = new NDimEnumerator(coordinates);
 
-                this.container.Set(Random.Range(0f, 1f), coordinates);
-            } while (nDimEnumerator.MoveNext());
+            int[] t_c;
+            while (nDimEnumerator.MoveNext()) {
+                t_c = nDimEnumerator.Current;
+                for (int i = 0; i < t_c.Length; i++) t_c[i] *= this.size;
+                this.container.Set(UnityEngine.Random.value, t_c);
+            }
+
+        }
 
 
-            // filling
+        public void Generate(float randomness) {
+            this.Scaffold();
 
-            int sizeCube = this.size;  // sizeCube must be power of 2
+            int sizeCube = this.size;
+            // sizeCube must be power of 2
 
-            int limit;
+            int noTiles;
+            NDimEnumerator generatorCoordinates;
+            int[] coordinates;
+            int[] tile_c = new int[this.container.dimensionality];
+
             while (sizeCube >= 2) {
-                limit = this.size / sizeCube + 1;
-                nDimEnumerator = new NDimEnumerator(new int[] { limit, limit, limit });
+                noTiles = this.size / sizeCube;
+                for (int i = 0; i < tile_c.Length; i++) tile_c[i] = noTiles;
+                generatorCoordinates = new NDimEnumerator(tile_c);
 
-                // todo: each sizeCube in parallel
-                do {
-                    for (int i = 0; i < this.container.dimensionality; i++)
-                        coordinates[i] = nDimEnumerator.Current[i] * sizeCube;
-
-                    this.Interpolate(sizeCube, randomness, coordinates);
-                } while (nDimEnumerator.MoveNext());
-
+                while (generatorCoordinates.MoveNext()) {  // do this in parallel
+                    coordinates = generatorCoordinates.Current;
+                    for (int i = 0; i < coordinates.Length; i++) coordinates[i] *= sizeCube;
+                    this.Interpolate(coordinates, sizeCube, randomness);
+                }
                 sizeCube /= 2;
             }
 
             this.container.Bake();
-            */
             return;
-        }
-
-        private void Interpolate(int sizeWindow, float randomness, params int[] coordinates) {
 
         }
+
+        private void Interpolate(int[] coordinates, int sizeWindow, float randomness) {
+            int[] midPoint = new int[coordinates.Length];
+            Array.Copy(coordinates, 0, midPoint, 0, coordinates.Length);
+            for (int i = 0; i < midPoint.Length; i++) midPoint[i] += sizeWindow / 2;
+
+            int[] borders = new int[this.container.dimensionality];
+            for (int i = 0; i < borders.Length; i++) borders[i] = 2;
+            NDimEnumerator nDimEnumerator = new NDimEnumerator(borders);
+
+            int[] t_c;
+            while (nDimEnumerator.MoveNext()) {     // for each vertex
+                t_c = nDimEnumerator.Current;
+                for (int i = 0; i < t_c.Length; i++) t_c[i] *= this.size;
+
+            }
+
+                // for each vertex
+                //  combine all coordinates with midPoint
+            }
     }
 
     class MyNoise {
@@ -101,14 +125,14 @@ namespace Assets {
         }
 
         private static float RandomizeOld(float value, float randomness) {
-            float r = Random.Range(-randomness, randomness);
+            float r = UnityEngine.Random.Range(-randomness, randomness);
             return Mathf.Max(0f, Mathf.Min(1f, value + r));
         }
 
         private static float Randomize(float value, float randomness) {
             float minDistance = Mathf.Min(value, 1f - value);
-            float r = Random.Range(0f, minDistance);
-            if (value < Random.Range(0f, 1f))
+            float r = UnityEngine.Random.Range(0f, minDistance);
+            if (value < UnityEngine.Random.Range(0f, 1f))
                 return value + r;
             return value - r;
 
@@ -135,10 +159,10 @@ namespace Assets {
         }
         
         private void Scaffold() {
-            this.container.Set(Random.value, 0, 0);
-            this.container.Set(Random.value, 0, this.size);
-            this.container.Set(Random.value, this.size, 0);
-            this.container.Set(Random.value, this.size, this.size);
+            this.container.Set(UnityEngine.Random.value, 0, 0);
+            this.container.Set(UnityEngine.Random.value, 0, this.size);
+            this.container.Set(UnityEngine.Random.value, this.size, 0);
+            this.container.Set(UnityEngine.Random.value, this.size, this.size);
         }
 
         public void Generate(float randomness) {
