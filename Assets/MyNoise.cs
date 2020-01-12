@@ -72,7 +72,7 @@ namespace Assets {
         }
     }
 
-        class MyNoise {
+    class MyNoise {
         public readonly int size;
         private readonly NoiseContainer container;
 
