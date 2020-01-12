@@ -10,7 +10,6 @@ public class TextureNoise : MonoBehaviour {
     public float randomness = .1f;
     private NoiseContainer NoiseVolume;
     private MyNoise myNoise;
-    private readonly NDimEnumerator nDimEnumerator = new NDimEnumerator(new int[] {2, 2, 1});
     public int[] runner;
 
 
@@ -38,12 +37,12 @@ public class TextureNoise : MonoBehaviour {
     void Start() {
         Assert.IsTrue((this.size & (this.size - 1)) == 0);
 
-        // this.NoiseVolume = new NoiseVolume(new int[] { this.size, this.size });
 
         int[] wrappedDimensions = new int[] { 0, 1 };
 
         int width = size + (wrappedDimensions.Contains(0) ? 0 : 1);
         int height = size + (wrappedDimensions.Contains(1) ? 0 : 1);
+        //this.NoiseVolume = new NoiseVolume(new int[] { width, height });
         this.NoiseVolume = new NoiseTextureGray(width, height);
 
         this.myNoise = new MyNoise(NoiseVolume, this.size, new int[] { 0, 1 });
@@ -56,11 +55,6 @@ public class TextureNoise : MonoBehaviour {
 
         // renderer.material.mainTexture = TextureNoise.CubeToTexture(this.NoiseVolume, this.layer);
         renderer.material.mainTexture = ((NoiseTextureGray) this.NoiseVolume).texture;
-
-        nDimEnumerator.MoveNext();
-        this.runner = nDimEnumerator.Current;
-
-        return;
     }
 
 }
