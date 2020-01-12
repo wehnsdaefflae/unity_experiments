@@ -6,11 +6,10 @@ using UnityEngine.Assertions;
 using System.Linq;
 
 public class TextureNoise : MonoBehaviour {
-    public int size = 128;
+    public int size = 512;
     public float randomness = .1f;
-    public float[] noiseArray;
-    private NoiseVolume NoiseVolume;
-    public int layer;
+    private NoiseContainer NoiseVolume;
+    private MyNoise myNoise;
 
     private static Texture2D CubeToTexture(NoiseVolume noiseVolume, int layer) {
         int[] shape = noiseVolume.shape;
@@ -34,31 +33,26 @@ public class TextureNoise : MonoBehaviour {
     }
 
     void Start() {
-        NoiseVolume = new NoiseVolume(new int[] { this.size, this.size });
-        MyNoise myNoise = new MyNoise(NoiseVolume, this.size, new int[] { 0, 1 });
-        myNoise.Generate(this.randomness);
+        Assert.IsTrue((this.size & (this.size - 1)) == 0);
+
+        // this.NoiseVolume = new NoiseVolume(new int[] { this.size, this.size });
+
+        int[] wrappedDimensions = new int[] { 0, 1 };
+
+        int width = size + (wrappedDimensions.Contains(0) ? 0 : 1);
+        int height = size + (wrappedDimensions.Contains(1) ? 0 : 1);
+        this.NoiseVolume = new NoiseTextureGray(width, height);
+
+        this.myNoise = new MyNoise(NoiseVolume, this.size, new int[] { 0, 1 });
     }
 
     void Update() {
         Renderer renderer = GetComponent<Renderer>();
-        renderer.material.mainTexture = TextureNoise.CubeToTexture(this.NoiseVolume, this.layer);
-        // renderer.material.mainTexture = Generate();
-    }
 
-    Texture2D Generate() {
-        Assert.IsTrue((this.size & (this.size - 1)) == 0);
+        this.myNoise.Generate(this.randomness);
 
-        int[] wrappedDimensions = new int[] { 0, 1 };
-        // int[] wrappedDimensions = new int[] { };
-
-        int width = size + (wrappedDimensions.Contains(0) ? 0 : 1);
-        int height = size + (wrappedDimensions.Contains(1) ? 0 : 1);
-        NoiseTextureGray noiseContainer = new NoiseTextureGray(width, height);
-
-        MyNoise myNoise = new MyNoise(noiseContainer, size, wrappedDimensions);
-        myNoise.Generate(this.randomness);
-        this.noiseArray = noiseContainer.GetArray();
-        return noiseContainer.texture;
+        // renderer.material.mainTexture = TextureNoise.CubeToTexture(this.NoiseVolume, this.layer);
+        renderer.material.mainTexture = ((NoiseTextureGray) this.NoiseVolume).texture;
     }
 
 }
