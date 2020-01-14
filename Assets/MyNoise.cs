@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Numerics;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -73,6 +74,22 @@ namespace Assets {
             this.container.Bake();
             return;
 
+        }
+
+        private static int Power(int b, int e) {
+            int r = 1;
+            for (int i = 0; i < e; i++) r *= b;      
+            return r;
+        }
+        private int[][] GetAllEdges(int[] pointSource, int[] pointSink) {
+            int dim = pointSource.Length;
+            Assert.AreEqual(dim, pointSink.Length);
+            NDimPermutator nDimPermutator = new NDimPermutator(dim, 1);
+            int[][] edges = new int[dim * MyNoiseNew.Power(2, dim - 1)][];
+
+
+
+            return edges;
         }
 
         private void Interpolate(int[] origin, int sizeWindow, float randomness) {
