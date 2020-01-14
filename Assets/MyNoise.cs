@@ -32,15 +32,15 @@ namespace Assets {
 
 
         private void Scaffold() {
-            int[] coordinates = new int[this.container.dimensionality];
-            for (int i = 0; i < coordinates.Length; i++) coordinates[i] = 2;
-            NDimEnumerator nDimEnumerator = new NDimEnumerator(coordinates);
+            int[] states = new int[this.container.dimensionality];
+            for (int i = 0; i < states.Length; i++) states[i] = 2;
+            NDimEnumerator nDimEnumerator = new NDimEnumerator(states);
 
-            int[] t_c;
+            int[] coordinates;
             while (nDimEnumerator.MoveNext()) {
-                t_c = nDimEnumerator.Current;
-                for (int i = 0; i < t_c.Length; i++) t_c[i] *= this.size;
-                this.container.Set(UnityEngine.Random.value, t_c);
+                coordinates = nDimEnumerator.Current;
+                for (int i = 0; i < coordinates.Length; i++) coordinates[i] *= this.size;
+                this.container.Set(UnityEngine.Random.value, coordinates);
             }
 
         }
@@ -75,9 +75,35 @@ namespace Assets {
 
         }
 
-        private void Interpolate(int[] coordinates, int sizeWindow, float randomness) {
-            int[] midPoint = new int[coordinates.Length];
-            Array.Copy(coordinates, 0, midPoint, 0, coordinates.Length);
+        private void Interpolate(int[] origin, int sizeWindow, float randomness) {
+            NDimPermutator nDimPermutator;
+            bool[] coordinateComposition;
+            int[] pointEnd, pointMid;
+            bool indexSource;
+            int midWay = sizeWindow / 2;
+
+            int dim = this.container.dimensionality;
+            Assert.AreEqual(dim, origin.Length);
+
+            for (int i = 0; i < dim; i++) {
+                nDimPermutator = new NDimPermutator(dim, i);
+                while (nDimPermutator.MoveNext()) {
+                    coordinateComposition = nDimPermutator.Current;
+                    pointEnd = new int[dim];
+                    pointMid = new int[dim];
+                    for (int j = 0; j < dim; j++) {
+                        indexSource = coordinateComposition[j];
+                        pointEnd[j] = indexSource ? 0 : sizeWindow;
+                        pointMid[j] = indexSource ? 0 : midWay;
+                    }
+                    
+                }
+
+            }
+
+
+            int[] midPoint = new int[origin.Length];
+            Array.Copy(origin, 0, midPoint, 0, origin.Length);
             for (int i = 0; i < midPoint.Length; i++) midPoint[i] += sizeWindow / 2;
 
             int[] borders = new int[this.container.dimensionality];

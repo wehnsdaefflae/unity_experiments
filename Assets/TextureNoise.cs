@@ -39,7 +39,7 @@ public class TextureNoise : MonoBehaviour {
     void Start() {
         Assert.IsTrue((this.size & (this.size - 1)) == 0);
 
-        this.NDimPermutator = new NDimPermutator(5, 3);
+        this.NDimPermutator = new NDimPermutator(3, 3);
 
         int[] wrappedDimensions = new int[] { 0, 1 };
 

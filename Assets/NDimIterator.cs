@@ -9,9 +9,9 @@ namespace Assets {
         private readonly int[] current;
         private readonly int[] target;
 
-        public NDimEnumerator(int[] target) {
-            this.dimensions = target.Length;
-            this.target = target;
+        public NDimEnumerator(int[] no_states_per_index) {
+            this.dimensions = no_states_per_index.Length;
+            this.target = no_states_per_index;
             this.current = new int[this.dimensions];
             for (int i = 0; i < this.dimensions; i++) Assert.IsTrue(this.target[i] >= 1);
             this.Reset();
@@ -98,6 +98,7 @@ namespace Assets {
         public void Reset() {
             for (int i = 0; i < this.size - this.selection; i++) this.current[i] = false;
             for (int i = this.size - this.selection; i < this.size; i++) this.current[i] = true;
+            this.initial = true;
         }
 
         public bool MoveNext() {
@@ -108,7 +109,6 @@ namespace Assets {
             }
 
             int noPrev = 0;
-            int border;
 
             for (int i = this.size - 1; i >= 0; i--) {
                 if (this.current[i]) {
@@ -120,7 +120,7 @@ namespace Assets {
                         this.current[i] = false;
                         this.current[i - 1] = true;
 
-                        border = this.size - noPrev;
+                        int border = this.size - noPrev;
                         for (int j = i + 1; j < border; j++) this.current[j] = false;
                         for (int j = border; j < this.size; j++) this.current[j] = true;
 
