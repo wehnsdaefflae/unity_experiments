@@ -10,7 +10,9 @@ public class TextureNoise : MonoBehaviour {
     public float randomness = .1f;
     private NoiseContainer NoiseVolume;
     private MyNoise myNoise;
-    public int[] runner;
+    private NDimPermutator NDimPermutator;
+    public bool[] permutation;
+    public bool permutationBool;
 
 
     private static Texture2D CubeToTexture(NoiseVolume noiseVolume, int layer) {
@@ -37,6 +39,7 @@ public class TextureNoise : MonoBehaviour {
     void Start() {
         Assert.IsTrue((this.size & (this.size - 1)) == 0);
 
+        this.NDimPermutator = new NDimPermutator(5, 3);
 
         int[] wrappedDimensions = new int[] { 0, 1 };
 
@@ -49,6 +52,9 @@ public class TextureNoise : MonoBehaviour {
     }
 
     void Update() {
+        this.permutationBool = this.NDimPermutator.MoveNext();
+        this.permutation = this.NDimPermutator.Current;
+
         Renderer renderer = GetComponent<Renderer>();
 
         this.myNoise.Generate(this.randomness);
