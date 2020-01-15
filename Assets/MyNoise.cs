@@ -81,15 +81,49 @@ namespace Assets {
             for (int i = 0; i < e; i++) r *= b;      
             return r;
         }
-        private int[][] GetAllEdges(int[] pointSource, int[] pointSink) {
-            int dim = pointSource.Length;
-            Assert.AreEqual(dim, pointSink.Length);
-            NDimPermutator nDimPermutator = new NDimPermutator(dim, 1);
-            int[][] edges = new int[dim * MyNoiseNew.Power(2, dim - 1)][];
 
 
+        public static int[][][] GetBorders(int[] pointA, int[] pointB) {
+            int dimension = pointA.Length;
+            Assert.AreEqual(dimension, pointB.Length);
 
-            return edges;
+            // initialize border structure (2*d-array of borders (2-array of points (d-array of integers)))
+            int[][][] borders = new int[dimension * 2][][];
+            int[][] eachBorder;
+            for (int i = 0; i < borders.Length; i++) {
+                eachBorder = new int[2][];
+                borders[i] = eachBorder;
+                for (int j = 0; j < eachBorder.Length; j++) eachBorder[j] = new int[dimension];
+            }
+
+            // declare loop variables
+            int[] pointBorder;
+            int[][] borderLo, borderHi;
+
+            // for each dimension
+            for (int i = 0; i < dimension; i++) {
+                // get low border
+                borderLo = borders[i];
+
+                // point a is original point a, point b is original point b EXCEPT along one dimension
+                Array.Copy(pointA, borderLo[0], dimension);
+                pointBorder = borderLo[1];
+                for (int j = 0; j < dimension; j++) {
+                    pointBorder[j] = i == j ? pointA[j] : pointB[j];
+                }
+
+                // get high border
+                borderHi = borders[i + dimension];
+
+                // point a is original point a EXCEPT along one dimension, point b is original point b
+                Array.Copy(pointB, borderHi[1], dimension);
+                pointBorder = borderHi[0];
+                for (int j = 0; j < dimension; j++) {
+                    pointBorder[j] = i == j ? pointB[j] : pointA[j];
+                }
+            }
+
+            return borders;
         }
 
         private void Interpolate(int[] origin, int sizeWindow, float randomness) {
