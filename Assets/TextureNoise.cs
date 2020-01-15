@@ -54,7 +54,7 @@ public class TextureNoise : MonoBehaviour {
     void Update() {
         this.permutationBool = this.NDimPermutator.MoveNext();
         this.permutation = this.NDimPermutator.Current;
-        int[][][] borders = MyNoiseNew.GetBorders(new int[] { 0, 0, 0 }, new int[] { 1, 1, 1 });
+        int[][][] borders = MyNoiseNew.GetBorders(new int[] { 0, 0, 0 }, new int[] { 0, 0, 1 });
 
         Renderer renderer = GetComponent<Renderer>();
 

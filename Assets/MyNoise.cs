@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using UnityEngine;
@@ -87,8 +88,20 @@ namespace Assets {
             int dimension = pointA.Length;
             Assert.AreEqual(dimension, pointB.Length);
 
+            bool[] indicesDifferent = new bool[dimension];
+            int noDifferences = 0;
+            for (int i = 0; i < dimension; i++) {
+                if (pointA[i] == pointB[i]) continue;
+                indicesDifferent[i] = true;
+                noDifferences++;
+            }
+            // total differences * 2 is number of borders
+
+            Assert.IsTrue(0 < noDifferences);
+            if (noDifferences == 1) return new int[][][] { new int[][] { pointA, pointB } };
+
             // initialize border structure (2*d-array of borders (2-array of points (d-array of integers)))
-            int[][][] borders = new int[dimension * 2][][];
+            int[][][] borders = new int[noDifferences * 2][][];
             int[][] eachBorder;
             for (int i = 0; i < borders.Length; i++) {
                 eachBorder = new int[2][];
@@ -100,10 +113,13 @@ namespace Assets {
             int[] pointBorder;
             int[][] borderLo, borderHi;
 
+            int index = 0;
             // for each dimension
             for (int i = 0; i < dimension; i++) {
+                if (!indicesDifferent[i]) continue;
+
                 // get low border
-                borderLo = borders[i];
+                borderLo = borders[index];
 
                 // point a is original point a, point b is original point b EXCEPT along one dimension
                 Array.Copy(pointA, borderLo[0], dimension);
@@ -113,7 +129,7 @@ namespace Assets {
                 }
 
                 // get high border
-                borderHi = borders[i + dimension];
+                borderHi = borders[index + noDifferences];
 
                 // point a is original point a EXCEPT along one dimension, point b is original point b
                 Array.Copy(pointB, borderHi[1], dimension);
@@ -121,56 +137,92 @@ namespace Assets {
                 for (int j = 0; j < dimension; j++) {
                     pointBorder[j] = i == j ? pointB[j] : pointA[j];
                 }
+
+                index++;
             }
 
             return borders;
         }
 
-        private void Interpolate(int[] origin, int sizeWindow, float randomness) {
-            NDimPermutator nDimPermutator;
-            bool[] coordinateComposition;
-            int[] pointEnd, pointMid;
-            bool indexSource;
-            int midWay = sizeWindow / 2;
+        private int[][] GetCorners(int[] pointA, int[] pointB) {
+            // === identical to GetBorders
+            int dimension = pointA.Length;
+            Assert.AreEqual(dimension, pointB.Length);
 
-            int dim = this.container.dimensionality;
-            Assert.AreEqual(dim, origin.Length);
-
-            for (int i = 0; i < dim; i++) {
-                nDimPermutator = new NDimPermutator(dim, i);
-                while (nDimPermutator.MoveNext()) {
-                    coordinateComposition = nDimPermutator.Current;
-                    pointEnd = new int[dim];
-                    pointMid = new int[dim];
-                    for (int j = 0; j < dim; j++) {
-                        indexSource = coordinateComposition[j];
-                        pointEnd[j] = indexSource ? 0 : sizeWindow;
-                        pointMid[j] = indexSource ? 0 : midWay;
-                    }
-                    
+            int[] indicesDifferent = new int[dimension];
+            int noDifferences = 0;
+            for (int i = 0; i < dimension; i++) {
+                if (pointA[i] == pointB[i]) indicesDifferent[i] = 1;
+                else {
+                    indicesDifferent[i] = 2;
+                    noDifferences++;
                 }
-
             }
 
+            Assert.IsTrue(0 < noDifferences);
+            // == end identical
 
-            int[] midPoint = new int[origin.Length];
-            Array.Copy(origin, 0, midPoint, 0, origin.Length);
-            for (int i = 0; i < midPoint.Length; i++) midPoint[i] += sizeWindow / 2;
+            if (noDifferences == 1) return new int[][] { pointA, pointB };
 
-            int[] borders = new int[this.container.dimensionality];
-            for (int i = 0; i < borders.Length; i++) borders[i] = 2;
-            NDimEnumerator nDimEnumerator = new NDimEnumerator(borders);
-
-            int[] t_c;
-            while (nDimEnumerator.MoveNext()) {     // for each vertex
-                t_c = nDimEnumerator.Current;
-                for (int i = 0; i < t_c.Length; i++) t_c[i] *= this.size;
-
+            NDimEnumerator nDimEnumerator = new NDimEnumerator(indicesDifferent);
+            int[][] corners = new int[nDimEnumerator.noIterations][];
+            int[] iterator, corner;
+            int index = 0;
+            while (nDimEnumerator.MoveNext()) {
+                iterator = nDimEnumerator.Current;
+                corner = new int[dimension];
+                corners[index] = corner;
+                for (int i = 0; i < dimension; i++) corner[i] = iterator[i] == 0 ? pointA[i] : pointB[i];
+                index++;
             }
 
-                // for each vertex
-                //  combine all coordinates with midPoint
+            return corners;
+
+        }
+
+        private int[] GetMidpoint(int[][] points) {
+            int dim = -1;
+
+            int[] midpoint = new int[dim];
+            foreach (int[] eachPoint in points) {
+                if (dim < 0) dim = eachPoint.Length;
+                else Assert.AreEqual(eachPoint.Length, dim);
+                for (int i = 0; i < dim; i++) midpoint[i] += eachPoint[i];
             }
+
+            for (int i = 0; i < dim; i++) midpoint[i] /= points.Length;
+
+            return midpoint;
+        }
+
+        private void Interpolate(int[] pointA, int sizeWindow, float randomness) {
+            int dim = pointA.Length;
+            int[] pointB = new int[dim];
+            for (int i = 0; i < dim; i++) pointB[i] = pointA[i] + sizeWindow;
+
+            int[][][] borders = MyNoiseNew.GetBorders(pointA, pointB);
+            Queue<int[][]> queueBorders = new Queue<int[][]>(borders);
+
+            int[][] eachBorder;
+            int[] pointBorderA, pointBorderB;
+            float valueSum = 0f;
+            while (queueBorders.Count >= 1) {
+                eachBorder = queueBorders.Dequeue();
+                pointBorderA = eachBorder[0];
+                pointBorderB = eachBorder[1];
+
+                int[][] corners = this.GetCorners(pointBorderA, pointBorderB);
+                Assert.IsTrue(2 < corners.Length);
+
+                foreach (int[] eachCorner in corners) valueSum += this.container.Get(eachCorner);
+
+                int[] midpoint = this.GetMidpoint(corners);
+                this.container.Set(valueSum / corners.Length, midpoint);  // randomize!
+
+                borders = MyNoiseNew.GetBorders(pointBorderA, pointBorderB);
+                if (1 < borders.Length) foreach (int[][] everyBorder in borders) queueBorders.Enqueue(everyBorder);
+            }
+        }
     }
 
     class MyNoise {
