@@ -48,56 +48,29 @@ namespace Assets {
         }
 
 
-        public void Generate(float randomness) {
-            this.Scaffold();
-
-            int sizeCube = this.size;
-            // sizeCube must be power of 2
-
-            int noTiles;
-            NDimEnumerator generatorCoordinates;
-            int[] coordinates;
-            int[] tile_c = new int[this.container.dimensionality];
-
-            while (sizeCube >= 2) {
-                noTiles = this.size / sizeCube;
-                for (int i = 0; i < tile_c.Length; i++) tile_c[i] = noTiles;
-                generatorCoordinates = new NDimEnumerator(tile_c);
-
-                while (generatorCoordinates.MoveNext()) {  // do this in parallel
-                    coordinates = generatorCoordinates.Current;
-                    for (int i = 0; i < coordinates.Length; i++) coordinates[i] *= sizeCube;
-                    this.Interpolate(coordinates, sizeCube, randomness);
-                }
-                sizeCube /= 2;
-            }
-
-            this.container.Bake();
-            return;
-
-        }
-
         private static int Power(int b, int e) {
             int r = 1;
-            for (int i = 0; i < e; i++) r *= b;      
+            for (int i = 0; i < e; i++) r *= b;
             return r;
         }
 
-
         public static int[][][] GetBorders(int[] pointA, int[] pointB) {
+            // === similar to GetCorners
             int dimension = pointA.Length;
             Assert.AreEqual(dimension, pointB.Length);
 
-            bool[] indicesDifferent = new bool[dimension];
             int noDifferences = 0;
+            bool[] indicesDifferent = new bool[dimension];
             for (int i = 0; i < dimension; i++) {
-                if (pointA[i] == pointB[i]) continue;
-                indicesDifferent[i] = true;
-                noDifferences++;
+                if (pointA[i] != pointB[i]) {
+                    indicesDifferent[i] = true;
+                    noDifferences++;
+                }
             }
-            // total differences * 2 is number of borders
 
             Assert.IsTrue(0 < noDifferences);
+            // === end similar
+
             if (noDifferences == 1) return new int[][][] { new int[][] { pointA, pointB } };
 
             // initialize border structure (2*d-array of borders (2-array of points (d-array of integers)))
@@ -144,8 +117,8 @@ namespace Assets {
             return borders;
         }
 
-        private int[][] GetCorners(int[] pointA, int[] pointB) {
-            // === identical to GetBorders
+        private static int[][] GetCorners(int[] pointA, int[] pointB) {
+            // === similar to GetBorders
             int dimension = pointA.Length;
             Assert.AreEqual(dimension, pointB.Length);
 
@@ -160,7 +133,7 @@ namespace Assets {
             }
 
             Assert.IsTrue(0 < noDifferences);
-            // == end identical
+            // == end similar
 
             if (noDifferences == 1) return new int[][] { pointA, pointB };
 
@@ -195,6 +168,10 @@ namespace Assets {
             return midpoint;
         }
 
+        private static float Randomize(float value, float randomness) {
+            return Mathf.Max(0f, Mathf.Min(1f, value + UnityEngine.Random.Range(-randomness, randomness)));
+        }
+
         private void Interpolate(int[] pointA, int sizeWindow, float randomness) {
             int dim = pointA.Length;
             int[] pointB = new int[dim];
@@ -203,26 +180,59 @@ namespace Assets {
             int[][][] borders = MyNoiseNew.GetBorders(pointA, pointB);
             Queue<int[][]> queueBorders = new Queue<int[][]>(borders);
 
-            int[][] eachBorder;
-            int[] pointBorderA, pointBorderB;
+            int[][] eachBorder, corners;
+            int[] pointBorderA, pointBorderB, midpoint;
             float valueSum = 0f;
             while (queueBorders.Count >= 1) {
                 eachBorder = queueBorders.Dequeue();
                 pointBorderA = eachBorder[0];
                 pointBorderB = eachBorder[1];
 
-                int[][] corners = this.GetCorners(pointBorderA, pointBorderB);
-                Assert.IsTrue(2 < corners.Length);
+                corners = MyNoiseNew.GetCorners(pointBorderA, pointBorderB);
+
+                if (!(2 < corners.Length)) {
+                    Assert.IsTrue(false);
+                };
 
                 foreach (int[] eachCorner in corners) valueSum += this.container.Get(eachCorner);
 
-                int[] midpoint = this.GetMidpoint(corners);
-                this.container.Set(valueSum / corners.Length, midpoint);  // randomize!
+                midpoint = this.GetMidpoint(corners);
+                this.container.Set(MyNoiseNew.Randomize(valueSum / corners.Length, randomness), midpoint);
 
                 borders = MyNoiseNew.GetBorders(pointBorderA, pointBorderB);
                 if (1 < borders.Length) foreach (int[][] everyBorder in borders) queueBorders.Enqueue(everyBorder);
             }
         }
+
+        public void Generate(float randomness) {
+            this.Scaffold();
+
+            int sizeCube = this.size;
+            // sizeCube must be power of 2
+
+            int noTiles;
+            NDimEnumerator generatorCoordinates;
+            int[] coordinates;
+            int[] tile_c = new int[this.container.dimensionality];
+
+            while (sizeCube >= 2) {
+                noTiles = this.size / sizeCube;
+                for (int i = 0; i < tile_c.Length; i++) tile_c[i] = noTiles;
+                generatorCoordinates = new NDimEnumerator(tile_c);
+
+                while (generatorCoordinates.MoveNext()) {  // do this in parallel
+                    coordinates = generatorCoordinates.Current;
+                    for (int i = 0; i < coordinates.Length; i++) coordinates[i] *= sizeCube;
+                    this.Interpolate(coordinates, sizeCube, randomness);
+                }
+                sizeCube /= 2;
+            }
+
+            this.container.Bake();
+            return;
+
+        }
+
     }
 
     class MyNoise {

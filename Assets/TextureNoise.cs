@@ -10,9 +10,7 @@ public class TextureNoise : MonoBehaviour {
     public float randomness = .1f;
     private NoiseContainer NoiseVolume;
     private MyNoise myNoise;
-    private NDimPermutator NDimPermutator;
-    public bool[] permutation;
-    public bool permutationBool;
+    private MyNoiseNew myNoiseNew;
 
 
     private static Texture2D CubeToTexture(NoiseVolume noiseVolume, int layer) {
@@ -39,8 +37,6 @@ public class TextureNoise : MonoBehaviour {
     void Start() {
         Assert.IsTrue((this.size & (this.size - 1)) == 0);
 
-        this.NDimPermutator = new NDimPermutator(3, 3);
-
         int[] wrappedDimensions = new int[] { 0, 1 };
 
         int width = size + (wrappedDimensions.Contains(0) ? 0 : 1);
@@ -48,17 +44,15 @@ public class TextureNoise : MonoBehaviour {
         //this.NoiseVolume = new NoiseVolume(new int[] { width, height });
         this.NoiseVolume = new NoiseTextureGray(width, height);
 
-        this.myNoise = new MyNoise(NoiseVolume, this.size, new int[] { 0, 1 });
+        // this.myNoise = new MyNoise(this.NoiseVolume, this.size, new int[] { 0, 1 });
+        this.myNoiseNew = new MyNoiseNew(this.NoiseVolume, this.size, new int[] { 0, 1 });
     }
 
     void Update() {
-        this.permutationBool = this.NDimPermutator.MoveNext();
-        this.permutation = this.NDimPermutator.Current;
-        int[][][] borders = MyNoiseNew.GetBorders(new int[] { 0, 0, 0 }, new int[] { 0, 0, 1 });
-
         Renderer renderer = GetComponent<Renderer>();
 
-        this.myNoise.Generate(this.randomness);
+        // this.myNoise.Generate(this.randomness);
+        this.myNoiseNew.Generate(this.randomness);
 
         // renderer.material.mainTexture = TextureNoise.CubeToTexture(this.NoiseVolume, this.layer);
         renderer.material.mainTexture = ((NoiseTextureGray) this.NoiseVolume).texture;
