@@ -155,14 +155,15 @@ namespace Assets {
 
         private int[] GetMidpoint(int[][] points) {
             int dim = -1;
-
-            int[] midpoint = new int[dim];
             foreach (int[] eachPoint in points) {
                 if (dim < 0) dim = eachPoint.Length;
                 else Assert.AreEqual(eachPoint.Length, dim);
-                for (int i = 0; i < dim; i++) midpoint[i] += eachPoint[i];
             }
 
+            int[] midpoint = new int[dim];
+            foreach (int[] eachPoint in points) {
+                for (int i = 0; i < dim; i++) midpoint[i] += eachPoint[i];
+            }
             for (int i = 0; i < dim; i++) midpoint[i] /= points.Length;
 
             return midpoint;
@@ -171,24 +172,29 @@ namespace Assets {
         private static float Randomize(float value, float randomness) {
             return Mathf.Max(0f, Mathf.Min(1f, value + UnityEngine.Random.Range(-randomness, randomness)));
         }
-
-        private int[][][] getCubeBorders(int[] pointA, int[] pointB, int dim)
-        {
-            //NDimPermutator nDimPermutator = new NDimPermutator()
-            return null;
-        }
+        
 
         private void Interpolate(int[] pointA, int sizeWindow, float randomness) {
+            // set border points
             int dim = pointA.Length;
             int[] pointB = new int[dim];
             for (int i = 0; i < dim; i++) pointB[i] = pointA[i] + sizeWindow;
 
             int[][][] borders = MyNoiseNew.GetBorders(pointA, pointB);
+            int[][] corners = MyNoiseNew.GetCorners(pointA, pointB);
+
+            Assert.IsTrue(corners.Length >= 2);
+
+            float valueSum = 0f;
+            foreach (int[] eachCorner in corners) valueSum += this.container.Get(eachCorner);
+
+            int[] midpoint = this.GetMidpoint(corners);
+            this.container.Set(MyNoiseNew.Randomize(valueSum / corners.Length, randomness), midpoint);
+
             Queue<int[][]> queueBorders = new Queue<int[][]>(borders);
 
-            int[][] eachBorder, corners;
-            int[] pointBorderA, pointBorderB, midpoint;
-            float valueSum = 0f;
+            int[][] eachBorder;
+            int[] pointBorderA, pointBorderB;
             while (queueBorders.Count >= 1) {
                 eachBorder = queueBorders.Dequeue();
                 pointBorderA = eachBorder[0];
@@ -196,10 +202,9 @@ namespace Assets {
 
                 corners = MyNoiseNew.GetCorners(pointBorderA, pointBorderB);
 
-                if (!(2 < corners.Length)) {
-                    Assert.IsTrue(false);
-                };
+                Assert.IsTrue(corners.Length >= 2);
 
+                valueSum = 0f;
                 foreach (int[] eachCorner in corners) valueSum += this.container.Get(eachCorner);
 
                 midpoint = this.GetMidpoint(corners);
