@@ -4,7 +4,15 @@ using UnityEngine.Assertions;
 namespace Assets {
     class NDimArray {
         private readonly float[] array;
-        private readonly int[] shape;
+        public readonly int[] shape;
+
+        public NDimArray(int[] shape, float[] initialArray) {
+            this.shape = shape;
+            int length = 1;
+            foreach (int d in shape) length *= d;
+            Assert.AreEqual(length, initialArray.Length);
+            array = initialArray;
+        }
 
         public NDimArray(int[] shape) {
             this.shape = shape;

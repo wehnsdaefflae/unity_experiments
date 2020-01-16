@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -38,19 +38,51 @@ namespace Assets {
             return this._Get(wrapped);
         }
 
+        public abstract NoiseContainer Copy();
+
+        public NoiseContainer SubShape(int[] shape) {
+            if (this.shape.Equals(shape)) return this.Copy();
+            int dim = shape.Length;
+            Assert.AreEqual(dim, this.shape.Length);
+            for (int i = 0; i < dim; i++) Assert.IsTrue(this.shape[i] >= shape[i]);
+
+            NoiseVolume noiseVolume = new NoiseVolume(shape);
+            NDimEnumerator nDimEnumerator = new NDimEnumerator(shape);
+            float value;
+            while (nDimEnumerator.MoveNext()) {
+                value = this.Get(nDimEnumerator.Current);
+                noiseVolume.Set(value);
+            }
+            return noiseVolume;
+        }
+
         public abstract void Bake();
     }
 
     class NoiseTextureGray : NoiseContainer {
-        public readonly Texture2D texture;
+        private readonly Texture2D texture;
         
         public NoiseTextureGray(int width, int height) : base(new int[] { width, height }) {
             this.texture = new Texture2D(width, height);
         }
 
+        public NoiseTextureGray(Texture2D texture) : base(new int[] { texture.width, texture.height}) {
+            this.texture = texture;
+        }
+
         public override void Bake() {
             this.texture.filterMode = FilterMode.Point;
             this.texture.Apply();
+        }
+
+        public Texture2D GetTexture() {
+            return this.texture;
+        }
+
+        public override NoiseContainer Copy() {
+            Texture2D textureCopy = new Texture2D(this.texture.width, this.texture.height);
+            Graphics.CopyTexture(this.texture, textureCopy);
+            return new NoiseTextureGray(textureCopy);
         }
 
         public override float[] GetArray() {
@@ -64,7 +96,7 @@ namespace Assets {
             }
             return array;
         }
-
+        
         protected override float _Get(params int[] coordinates) {
             Color color = this.texture.GetPixel(coordinates[0], coordinates[1]);
             return color.r;
@@ -84,7 +116,22 @@ namespace Assets {
             this.array = new NDimArray(shape);
         }
 
+        public NoiseVolume(NDimArray array) : base(array.shape) {
+            this.array = array;
+        }
+
         public override void Bake() { }
+
+        public override NoiseContainer Copy() {
+            float[] arraySource = this.array.GetArray();
+            int length = arraySource.Length;
+            float[] arrayTarget = new float[length];
+            Array.Copy(arraySource, arrayTarget, length);
+
+            NDimArray array = new NDimArray(this.shape, arrayTarget);
+            NoiseVolume noiseVolume = new NoiseVolume(array);
+            return noiseVolume;
+        }
 
         public override float[] GetArray() {
             return this.array.GetArray();
@@ -97,5 +144,6 @@ namespace Assets {
         protected override void _Set(float value, params int[] coordinates) {
             this.array.Set(value, coordinates);
         }
+        
     }
 }
