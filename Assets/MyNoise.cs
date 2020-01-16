@@ -172,6 +172,12 @@ namespace Assets {
             return Mathf.Max(0f, Mathf.Min(1f, value + UnityEngine.Random.Range(-randomness, randomness)));
         }
 
+        private int[][][] getCubeBorders(int[] pointA, int[] pointB, int dim)
+        {
+            //NDimPermutator nDimPermutator = new NDimPermutator()
+            return null;
+        }
+
         private void Interpolate(int[] pointA, int sizeWindow, float randomness) {
             int dim = pointA.Length;
             int[] pointB = new int[dim];
