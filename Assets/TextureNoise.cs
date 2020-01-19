@@ -12,29 +12,29 @@ public class TextureNoise : MonoBehaviour {
 
 
     /*
-        public override Texture2D GetTexture(int layer) {
-            int[] shape = this.array.shape;
-            Assert.IsTrue(layer < )
-            Texture2D texture = new Texture2D(shape[0], shape[1]);
+    public override Texture2D GetTexture(int layer, NoiseVolume noiseVolume) {
+        int[] shape = this.NoiseVolume.shape;
+        
 
-            float value;
-            Color color;
-            for (int x = 0; x < shape[0]; x++) {
-                for (int y = 0; y < shape[1]; y++) {
-                    value = this.Get(x, y, layer);
-                    color = new Color(value, value, value);
-                    texture.SetPixel(x, y, color);
-                }
+        Texture2D texture = new Texture2D(shape[0], shape[1]);
+
+        float value;
+        Color color;
+        for (int x = 0; x < shape[0]; x++) {
+            for (int y = 0; y < shape[1]; y++) {
+                value = this.Get(x, y, layer);
+                color = new Color(value, value, value);
+                texture.SetPixel(x, y, color);
             }
-
-            texture.filterMode = FilterMode.Point;
-            texture.Apply();
-
-            return texture;
         }
 
+        texture.filterMode = FilterMode.Point;
+        texture.Apply();
 
+        return texture;
+    }
     */
+    
 
     void Start() {
         Assert.IsTrue((this.size & (this.size - 1)) == 0);
