@@ -4,7 +4,7 @@ using UnityEngine.Assertions;
 
 
 public class TextureNoise : MonoBehaviour {
-    public int size = 256;
+    public int size = 128;
     public float randomness = .1f;
 
     private NoiseContainer NoiseVolume;
@@ -17,9 +17,11 @@ public class TextureNoise : MonoBehaviour {
     void Awake() {
         Assert.IsTrue((this.size & (this.size - 1)) == 0);
 
-        int[] wrappedDimensions = new int[] { 0, 1, 2 };
+        int[] wrappedDimensions = new int[] { 2 };
+        // int[] wrappedDimensions = new int[] { 0, 1, 2 };
 
-        this.NoiseVolume = new NoiseVolume(new int[] { this.size, this.size, this.size });
+        this.NoiseVolume = new NoiseVolume(new int[] { this.size + 1, this.size + 1, this.size });
+        // this.NoiseVolume = new NoiseVolume(new int[] { this.size, this.size, this.size });
 
         this.myNoiseNew = new MyNoiseNew(this.NoiseVolume, this.size, wrappedDimensions);
 
