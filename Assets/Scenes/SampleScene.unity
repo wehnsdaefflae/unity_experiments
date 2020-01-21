@@ -385,5 +385,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a48afa8791b188b4e9345cdf003353dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: 512
+  size: 256
   randomness: 0.1

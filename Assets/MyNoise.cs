@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -20,9 +19,11 @@ namespace Assets {
             for (int i = 0; i < container.dimensionality; i++) {
                 eachDimension = container.shape[i];
                 if (wrappedDimensions.Contains(i)) {
+                    // dimension i is wrapped
                     Assert.IsTrue(container.shape[i] >= size);
                     Assert.IsTrue((eachDimension & (eachDimension - 1)) == 0);
                 } else {
+                    // dimension i is not wrapped
                     Assert.IsTrue(container.shape[i] - 1 >= size);
                     Assert.IsTrue(((eachDimension - 1) & (eachDimension - 2)) == 0);
                 }
