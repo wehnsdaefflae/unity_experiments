@@ -386,4 +386,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   size: 128
-  randomness: 0.1
+  randomness: 0.5
