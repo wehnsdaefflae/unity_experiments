@@ -9,7 +9,7 @@ namespace Assets {
 
         public abstract float[] GetArray();
 
-        public static Texture2D GetTexture(NoiseContainer noiseVolume, params int[] layer) {
+        public static Texture2D GetTexture(NoiseContainer noiseVolume, int offsetX, int offsetY, params int[] layer) {
             int[] shape = noiseVolume.shape;
             int dimensions = layer.Length;
             Assert.AreEqual(dimensions + 2, shape.Length);
@@ -21,9 +21,9 @@ namespace Assets {
             float value;
             Color color;
             for (int x = 0; x < shape[0]; x++) {
-                coordinates[0] = x;
+                coordinates[0] = Mathf.Abs((x + offsetX) % shape[0]);
                 for (int y = 0; y < shape[1]; y++) {
-                    coordinates[1] = y;
+                    coordinates[1] = Mathf.Abs((y + offsetY) % shape[1]);
                     value = noiseVolume.Get(coordinates);
                     color = new Color(value, value, value);
                     texture.SetPixel(x, y, color);
