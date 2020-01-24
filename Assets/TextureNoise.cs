@@ -56,27 +56,27 @@ public class TextureNoise : MonoBehaviour {
         }
 
         int noTextures = textures.Length;
+        Assert.AreEqual(noTextures, weights.Length);
         float sumWeights = weights.Sum();
+        for (int i = 0; i < noTextures; i++) weights[i] /= sumWeights;
 
         Texture2D texture = new Texture2D(width, height), everyTexture;
         Color eachColor, newColor;
-        float r, g, b, a;
+        float r, g, b;
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 r = 0f;
                 g = 0f;
                 b = 0f;
-                a = 0f;
                 for (int i = 0; i < noTextures; i++) {
                     everyTexture = textures[i];
                     eachColor = everyTexture.GetPixel(x, y);
                     r += eachColor.r * weights[i];
                     g += eachColor.g * weights[i];
                     b += eachColor.b * weights[i];
-                    a += eachColor.a * weights[i];
                 }
-                newColor = new Color(r / sumWeights, g / sumWeights, b / sumWeights, a / sumWeights);
+                newColor = new Color(r, g, b);
                 texture.SetPixel(x, y, newColor);
             }
         }
@@ -105,10 +105,11 @@ public class TextureNoise : MonoBehaviour {
 
         Texture2D merged = Merge(new Texture2D[] { textureA, textureB, textureC }, weights);
 
-        this.renderer.material.mainTexture = merged;
+        // this.renderer.material.mainTexture = merged;
+        this.renderer.sharedMaterial.mainTexture = merged;
 
         layer = (layer + 1) % this.size;
     }
 
-# https://www.youtube.com/watch?v=WP-Bm65Q-1Y&list=PLFt_AvWsXl0eBW2EiBtl_sxmDtSgZBxB3&index=2
+    // https://www.youtube.com/watch?v=WP-Bm65Q-1Y&list=PLFt_AvWsXl0eBW2EiBtl_sxmDtSgZBxB3&index=2
 }

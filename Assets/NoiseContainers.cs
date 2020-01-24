@@ -14,16 +14,20 @@ namespace Assets {
             int dimensions = layer.Length;
             Assert.AreEqual(dimensions + 2, shape.Length);
 
-            Texture2D texture = new Texture2D(shape[0], shape[1]);
+            int width = shape[0];
+            int height = shape[1];
+
+            Texture2D texture = new Texture2D(width, height);
+            Color[] colourMap = new Color[width * height];
 
             int[] coordinates = new int[shape.Length];
             for (int i = 0; i < dimensions; i++) coordinates[i + 2] = layer[i];
             float value;
             Color color;
-            for (int x = 0; x < shape[0]; x++) {
-                coordinates[0] = Mathf.Abs((x + offsetX) % shape[0]);
-                for (int y = 0; y < shape[1]; y++) {
-                    coordinates[1] = Mathf.Abs((y + offsetY) % shape[1]);
+            for (int x = 0; x < width; x++) {
+                coordinates[0] = Mathf.Abs((x + offsetX) % width);
+                for (int y = 0; y < height; y++) {
+                    coordinates[1] = Mathf.Abs((y + offsetY) % height);
                     value = noiseVolume.Get(coordinates);
                     color = new Color(value, value, value);
                     texture.SetPixel(x, y, color);
