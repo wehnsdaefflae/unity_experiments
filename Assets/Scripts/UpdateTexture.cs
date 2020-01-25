@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using Assets;
 using UnityEngine.Assertions;
-using System.Linq;
 
 public class UpdateTexture : MonoBehaviour {
     public float randomness = .1f;
@@ -63,7 +62,7 @@ public class UpdateTexture : MonoBehaviour {
 
         float[] weights = new float[] { 1f, .5f, .25f };
 
-        Texture2D merged = Merge(new Texture2D[] { textureA, textureB, textureC }, weights);
+        Texture2D merged = TextureTools.Merge(new Texture2D[] { textureA, textureB, textureC }, weights);
 
         // this.renderer.material.mainTexture = merged;
         this.renderer.sharedMaterial.mainTexture = merged;
