@@ -7,38 +7,7 @@ using UnityEngine.Assertions;
 namespace Assets {
 
     class NoiseGeneration {
-        public readonly int size;
-        private readonly NoiseContainer container;
-
-        public NoiseGeneration(NoiseContainer container, int size, int[] wrappedDimensions) {
-            Assert.IsTrue(0 < size);
-            // is size power of 2?
-            Assert.IsTrue((size & (size - 1)) == 0);
-
-            int eachDimension;
-            for (int i = 0; i < container.dimensionality; i++) {
-                eachDimension = container.shape[i];
-                if (wrappedDimensions.Contains(i)) {
-                    // dimension i is wrapped
-                    Assert.IsTrue(container.shape[i] >= size);
-                    Assert.IsTrue((eachDimension & (eachDimension - 1)) == 0);
-                } else {
-                    // dimension i is not wrapped
-                    Assert.IsTrue(container.shape[i] - 1 >= size);
-                    Assert.IsTrue(((eachDimension - 1) & (eachDimension - 2)) == 0);
-                }
-            }
-
-            this.size = size;
-            this.container = container;
-        }
-
-        private static int Power(int b, int e) {
-            int r = 1;
-            for (int i = 0; i < e; i++) r *= b;
-            return r;
-        }
-
+        
         private static int[][][] GetBorders(int[] pointA, int[] pointB) {
             // === similar to GetCorners
             int dimension = pointA.Length;
@@ -154,25 +123,21 @@ namespace Assets {
             return midpoint;
         }
 
-        private static float Randomize(float value, float randomness) {
-            return Mathf.Max(0f, Mathf.Min(1f, value + UnityEngine.Random.Range(-randomness, randomness)));
-        }
-
-        private void Scaffold() {
-            int[] states = new int[this.container.dimensionality];
+        private static void Scaffold(NoiseContainer container, float minValue, float maxValue) {
+            int[] states = new int[container.dimensionality];
             for (int i = 0; i < states.Length; i++) states[i] = 2;
             NDimEnumerator nDimEnumerator = new NDimEnumerator(states);
 
             int[] coordinates;
             while (nDimEnumerator.MoveNext()) {
                 coordinates = nDimEnumerator.Current;
-                for (int i = 0; i < coordinates.Length; i++) coordinates[i] *= this.size;
-                this.container.Set(UnityEngine.Random.value, coordinates);
+                for (int i = 0; i < coordinates.Length; i++) coordinates[i] *= container.size;
+                container.Set(UnityEngine.Random.Range(minValue, maxValue), coordinates);
             }
 
         }
 
-        private void Interpolate(int[] pointA, int sizeWindow, float randomness) {
+        private static void Interpolate(NoiseContainer noiseContainer, int[] pointA, int sizeWindow, float randomness, float minValue, float maxValue) {
             // set border points
             int dim = pointA.Length;
             int[] pointB = new int[dim];
@@ -184,10 +149,10 @@ namespace Assets {
             Assert.IsTrue(corners.Length >= 2);
 
             float valueSum = 0f;
-            foreach (int[] eachCorner in corners) valueSum += this.container.Get(eachCorner);
+            foreach (int[] eachCorner in corners) valueSum += noiseContainer.Get(eachCorner);
 
             int[] midpoint = NoiseGeneration.GetMidpoint(corners);
-            this.container.Set(NoiseGeneration.Randomize(valueSum / corners.Length, randomness), midpoint);
+            noiseContainer.Set(MathTools.Randomize(valueSum / corners.Length, randomness, minValue, maxValue), midpoint);
 
             Queue<int[][]> queueBorders = new Queue<int[][]>(borders);
 
@@ -203,45 +168,45 @@ namespace Assets {
                 Assert.IsTrue(corners.Length >= 2);
 
                 valueSum = 0f;
-                foreach (int[] eachCorner in corners) valueSum += this.container.Get(eachCorner);
+                foreach (int[] eachCorner in corners) valueSum += noiseContainer.Get(eachCorner);
 
                 midpoint = NoiseGeneration.GetMidpoint(corners);
-                this.container.Set(NoiseGeneration.Randomize(valueSum / corners.Length, randomness), midpoint);
+                noiseContainer.Set(MathTools.Randomize(valueSum / corners.Length, randomness, minValue, maxValue), midpoint);
 
                 borders = NoiseGeneration.GetBorders(pointBorderA, pointBorderB);
                 if (1 < borders.Length) foreach (int[][] everyBorder in borders) queueBorders.Enqueue(everyBorder);
             }
         }
 
-        public void Generate(float randomness, int granularity) {
-            this.Scaffold();
+        public static void Generate(NoiseContainer noiseContainer, float randomness, int granularity, float minValue, float maxValue) {
+            NoiseGeneration.Scaffold(noiseContainer, minValue, maxValue);
 
-            int sizeCube = this.size;
+            int sizeCube = noiseContainer.size;
             // sizeCube must be power of 2
 
             int noTiles;
             NDimEnumerator generatorCoordinates;
             int[] coordinates;
-            int[] tile_c = new int[this.container.dimensionality];
+            int[] tile_c = new int[noiseContainer.dimensionality];
+
+            float randomEffective;
 
             while (sizeCube >= 2) {
-                noTiles = this.size / sizeCube;
+                randomEffective = sizeCube >= granularity ? randomness : 0;
+
+                noTiles = noiseContainer.size / sizeCube;
                 for (int i = 0; i < tile_c.Length; i++) tile_c[i] = noTiles;
                 generatorCoordinates = new NDimEnumerator(tile_c);
 
                 while (generatorCoordinates.MoveNext()) {  // do this in parallel
                     coordinates = generatorCoordinates.Current;
                     for (int i = 0; i < coordinates.Length; i++) coordinates[i] *= sizeCube;
-                    this.Interpolate(coordinates, sizeCube, sizeCube >= granularity ? randomness : 0);
+                    NoiseGeneration.Interpolate(noiseContainer, coordinates, sizeCube, randomEffective, minValue, maxValue);
                 }
                 sizeCube /= 2;
             }
 
-            this.container.Bake();
-        }
-
-        public void Generate(float randomness) {
-            this.Generate(randomness, 2);
+            noiseContainer.Bake();
         }
     }
 }

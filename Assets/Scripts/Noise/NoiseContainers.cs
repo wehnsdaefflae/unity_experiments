@@ -1,49 +1,23 @@
 ﻿using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Assets {
     abstract class NoiseContainer {
         public readonly int[] shape;
+        public readonly int size;
         public readonly int dimensionality;
-
-        public abstract float[] GetArray();
-
-        public static Texture2D GetTexture(NoiseContainer noiseVolume, int offsetX, int offsetY, params int[] layer) {
-            int[] shape = noiseVolume.shape;
-            int dimensions = layer.Length;
-            Assert.AreEqual(dimensions + 2, shape.Length);
-
-            int width = shape[0];
-            int height = shape[1];
-
-            Texture2D texture = new Texture2D(width, height);
-            Color[] colourMap = new Color[width * height];
-
-            int[] coordinates = new int[shape.Length];
-            for (int i = 0; i < dimensions; i++) coordinates[i + 2] = layer[i];
-            float value;
-            Color color;
-            for (int x = 0; x < width; x++) {
-                coordinates[0] = Mathf.Abs((x + offsetX) % width);
-                for (int y = 0; y < height; y++) {
-                    coordinates[1] = Mathf.Abs((y + offsetY) % height);
-                    value = noiseVolume.Get(coordinates);
-                    color = new Color(value, value, value);
-                    texture.SetPixel(x, y, color);
-                }
-            }
-
-            texture.filterMode = FilterMode.Point;
-            texture.Apply();
-
-            return texture;
-        }
+        public readonly int[] wrappedDimensions;
 
 
-        protected NoiseContainer(int[] shape) {
-            this.shape = shape;
-            this.dimensionality = shape.Length;
+        protected NoiseContainer(int size, int dimensionality, params int[] wrappedDimensions) {
+            Assert.IsTrue(size != 0 && ((size & (size - 1)) == 0));     // check if size is power of 2
+            this.shape = new int[dimensionality];
+            this.size = size;
+            for (int i = 0; i < dimensionality; i++) this.shape[i] = wrappedDimensions.Contains(i) ? size : size + 1;
+            this.dimensionality = dimensionality;
+            this.wrappedDimensions = wrappedDimensions;
         }
 
         private int[] Wrap(int[] coordinates) {
@@ -72,101 +46,32 @@ namespace Assets {
 
         public abstract NoiseContainer Copy();
 
-        public NoiseContainer SubShape(int[] shape) {
-            if (this.shape.Equals(shape)) return this.Copy();
-            int dim = shape.Length;
-            Assert.AreEqual(dim, this.shape.Length);
-            for (int i = 0; i < dim; i++) Assert.IsTrue(this.shape[i] >= shape[i]);
-
-            NoiseVolume noiseVolume = new NoiseVolume(shape);
-            NDimEnumerator nDimEnumerator = new NDimEnumerator(shape);
-            float value;
-            while (nDimEnumerator.MoveNext()) {
-                value = this.Get(nDimEnumerator.Current);
-                noiseVolume.Set(value);
-            }
-            return noiseVolume;
-        }
+        public abstract NDimArray GetSlice(int[] coordinatesSlice);
 
         public abstract void Bake();
-    }
-
-    class NoiseTextureGray : NoiseContainer {
-        private readonly Texture2D texture;
-        
-        public NoiseTextureGray(int width, int height) : base(new int[] { width, height }) {
-            this.texture = new Texture2D(width, height);
-        }
-
-        public NoiseTextureGray(Texture2D texture) : base(new int[] { texture.width, texture.height}) {
-            this.texture = texture;
-        }
-
-        public override void Bake() {
-            this.texture.filterMode = FilterMode.Point;
-            this.texture.Apply();
-        }
-
-        public Texture2D GetTexture() {
-            return this.texture;
-        }
-
-        public override NoiseContainer Copy() {
-            Texture2D textureCopy = new Texture2D(this.texture.width, this.texture.height);
-            Graphics.CopyTexture(this.texture, textureCopy);
-            return new NoiseTextureGray(textureCopy);
-        }
-
-        public override float[] GetArray() {
-            float[] array = new float[texture.width * texture.height];
-            int i = 0;
-            for (int x = 0; x < this.texture.width; x++) {
-                for (int y = 0; y < texture.height; y++) {
-                    array[i] = this._Get(x, y);
-                    i++;
-                }
-            }
-            return array;
-        }
-        
-        protected override float _Get(params int[] coordinates) {
-            Color color = this.texture.GetPixel(coordinates[0], coordinates[1]);
-            return color.r;
-        }
-
-        protected override void _Set(float value, params int[] coordinates) {
-            Color color = new Color(value, value, value);
-            this.texture.SetPixel(coordinates[0], coordinates[1], color);
-        }
-
     }
 
     class NoiseVolume : NoiseContainer {
         private readonly NDimArray array;
 
-        public NoiseVolume(int[] shape) : base(shape) {
-            this.array = new NDimArray(shape);
+        public NoiseVolume(int size, int dimensionality, params int[] wrappedDimensions) : base(size, dimensionality, wrappedDimensions) {
+            this.array = new NDimArray(this.shape);
         }
 
-        public NoiseVolume(NDimArray array) : base(array.shape) {
-            this.array = array;
+        public NoiseVolume(NDimArray initialArray, int size, int dimensionality, params int[] wrappedDimensions) : base(size, dimensionality, wrappedDimensions) {
+            Assert.AreEqual(initialArray.shape, this.shape);
+            this.array = initialArray;
         }
 
         public override void Bake() { }
 
         public override NoiseContainer Copy() {
-            float[] arraySource = this.array.GetArray();
-            int length = arraySource.Length;
-            float[] arrayTarget = new float[length];
-            Array.Copy(arraySource, arrayTarget, length);
-
-            NDimArray array = new NDimArray(this.shape, arrayTarget);
-            NoiseVolume noiseVolume = new NoiseVolume(array);
+            NoiseVolume noiseVolume = new NoiseVolume(this.array.Copy(), this.size, this.dimensionality, this.wrappedDimensions);
             return noiseVolume;
         }
 
-        public override float[] GetArray() {
-            return this.array.GetArray();
+        public override NDimArray GetSlice(int[] coordinatesSlice) {
+            return this.array.Slice(coordinatesSlice);
         }
 
         protected override float _Get(params int[] coordinates) {

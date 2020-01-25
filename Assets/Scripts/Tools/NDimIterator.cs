@@ -10,13 +10,13 @@ namespace Assets {
         private readonly int[] target;
         public readonly int noIterations;
 
-        public NDimEnumerator(int[] no_states_per_index) {
-            this.dimensions = no_states_per_index.Length;
-            this.target = no_states_per_index;
+        public NDimEnumerator(int[] noStatesPerIndex) {
+            this.dimensions = noStatesPerIndex.Length;
+            this.target = noStatesPerIndex;
             this.current = new int[this.dimensions];
             for (int i = 0; i < this.dimensions; i++) Assert.IsTrue(this.target[i] >= 1);
             this.noIterations = 1;
-            foreach (int states in no_states_per_index) this.noIterations *= states;
+            foreach (int states in noStatesPerIndex) this.noIterations *= states;
             this.Reset();
         }
 
