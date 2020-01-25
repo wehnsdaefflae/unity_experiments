@@ -3,7 +3,7 @@ using Assets;
 using UnityEngine.Assertions;
 using System.Linq;
 
-public class TextureNoise : MonoBehaviour {
+public class UpdateTexture : MonoBehaviour {
     public float randomness = .1f;
     public int granularity = 2;
 
@@ -20,9 +20,9 @@ public class TextureNoise : MonoBehaviour {
     private NoiseContainer NoiseVolumeB;
     private NoiseContainer NoiseVolumeC;
 
-    private MyNoise myNoiseA;
-    private MyNoise myNoiseB;
-    private MyNoise myNoiseC;
+    private NoiseGeneration myNoiseA;
+    private NoiseGeneration myNoiseB;
+    private NoiseGeneration myNoiseC;
 
     private new Renderer renderer;
 
@@ -38,9 +38,9 @@ public class TextureNoise : MonoBehaviour {
         this.NoiseVolumeB = new NoiseVolume(new int[] { this.size, this.size });
         this.NoiseVolumeC = new NoiseVolume(new int[] { this.size, this.size });
 
-        this.myNoiseA = new MyNoise(this.NoiseVolumeA, this.size, wrappedDimensions);
-        this.myNoiseB = new MyNoise(this.NoiseVolumeB, this.size, wrappedDimensions);
-        this.myNoiseC = new MyNoise(this.NoiseVolumeC, this.size, wrappedDimensions);
+        this.myNoiseA = new NoiseGeneration(this.NoiseVolumeA, this.size, wrappedDimensions);
+        this.myNoiseB = new NoiseGeneration(this.NoiseVolumeB, this.size, wrappedDimensions);
+        this.myNoiseC = new NoiseGeneration(this.NoiseVolumeC, this.size, wrappedDimensions);
 
         this.renderer = GetComponent<Renderer>();
 
