@@ -137,6 +137,7 @@ namespace Assets {
 
         }
 
+
         private static void Interpolate(NoiseContainer noiseContainer, int[] pointA, int sizeWindow, float randomness, float minValue, float maxValue) {
             // set border points
             int dim = pointA.Length;
@@ -148,11 +149,9 @@ namespace Assets {
 
             Assert.IsTrue(corners.Length >= 2);
 
-            float valueSum = 0f;
-            foreach (int[] eachCorner in corners) valueSum += noiseContainer.Get(eachCorner);
-
+            float a = MathTools.AverageCartesian(from eachCorner in corners select noiseContainer.Get(eachCorner));
             int[] midpoint = NoiseGeneration.GetMidpoint(corners);
-            noiseContainer.Set(MathTools.Randomize(valueSum / corners.Length, randomness, minValue, maxValue), midpoint);
+            noiseContainer.Set(MathTools.Randomize(a, randomness, minValue, maxValue), midpoint);
 
             Queue<int[][]> queueBorders = new Queue<int[][]>(borders);
 
@@ -167,11 +166,9 @@ namespace Assets {
 
                 Assert.IsTrue(corners.Length >= 2);
 
-                valueSum = 0f;
-                foreach (int[] eachCorner in corners) valueSum += noiseContainer.Get(eachCorner);
-
+                a = MathTools.AverageCartesian(from eachCorner in corners select noiseContainer.Get(eachCorner));
                 midpoint = NoiseGeneration.GetMidpoint(corners);
-                noiseContainer.Set(MathTools.Randomize(valueSum / corners.Length, randomness, minValue, maxValue), midpoint);
+                noiseContainer.Set(MathTools.Randomize(a, randomness, minValue, maxValue), midpoint);
 
                 borders = NoiseGeneration.GetBorders(pointBorderA, pointBorderB);
                 if (1 < borders.Length) foreach (int[][] everyBorder in borders) queueBorders.Enqueue(everyBorder);

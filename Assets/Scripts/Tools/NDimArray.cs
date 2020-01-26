@@ -2,7 +2,7 @@
 using UnityEngine.Assertions;
 
 namespace Assets {
-    class NDimArray {
+    public class NDimArray {
         private readonly float[] array;
         public readonly int[] shape;
 
